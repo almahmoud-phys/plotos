@@ -1,0 +1,12 @@
+{
+  "chartCreator": {
+    "tabs": {
+      "data": "Data",
+      "charts": "Charts"
+    },
+    "panels": {
+      "dataManagement": "Data Management Panel",
+      "chartGallery": "Chart Gallery"
+    }
+  }
+}
