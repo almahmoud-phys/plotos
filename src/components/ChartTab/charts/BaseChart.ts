@@ -1,6 +1,7 @@
 import { ChartOptions, ChartData } from 'chart.js';
 import { Trace } from '../../../types/chart';
-import { ChartConfig } from '../../../types/chartConfig';
+import { ChartConfig, ChartAreaBorder } from '../../../types/chartConfig';
+import { chartAreaBorder } from './plugins/chartAreaBorder';
 
 export type ChartDimensions = {
   width: number;
@@ -106,14 +107,12 @@ export abstract class BaseChart {
   };
 
   public getChartOptions(dimensions: { width: number; height: number }): ChartOptions<'line' | 'bar' | 'scatter'> {
-    const limits = this.calculateAxisLimits(this.getChartData([]).datasets);
-    
-    return {
+    const options: ChartOptions<'line' | 'bar' | 'scatter'> = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: this.config.legendPosition || 'top',
+          position: 'top',
           display: this.config.showLegend ?? true
         },
         title: {
@@ -122,14 +121,21 @@ export abstract class BaseChart {
           position: this.config.titlePosition || 'top',
           font: this.config.titleFontSize ? {
             size: this.config.titleFontSize,
-            style: (this.config.titleFontStyle === 'italic' || this.config.titleFontStyle === 'bolditalic') ? 'italic' : 'normal',
-            weight: (this.config.titleFontStyle === 'bold' || this.config.titleFontStyle === 'bolditalic') ? 700 : 400
+            style: this.config.titleFontStyle === 'italic' ? 'italic' : 'normal',
+            weight: this.config.titleFontStyle === 'bold' ? 700 : 400
           } : undefined,
           color: this.config.titleColor || undefined
-        }
+        },
+        chartAreaBorder: this.config.border as ChartAreaBorder ?? {
+          display: false,
+          color: '#000000',
+          width: 1,
+          style: 'solid'
+        },
       },
       scales: {
         x: {
+          type: 'linear' as const,
           display: true,
           position: this.config.xAxisPosition || 'bottom',
           title: {
@@ -137,13 +143,13 @@ export abstract class BaseChart {
             text: this.config.xAxisLabel || 'X Axis',
             font: {
               size: this.config.xAxisFontSize,
-              style: (this.config.xAxisFontStyle === 'italic' || this.config.xAxisFontStyle === 'bolditalic') ? 'italic' : 'normal',
-              weight: (this.config.xAxisFontStyle === 'bold' || this.config.xAxisFontStyle === 'bolditalic') ? 700 : 400
+              style: (this.config.xAxisFontStyle === 'italic') ? 'italic' : 'normal',
+              weight: (this.config.xAxisFontStyle === 'bold') ? 700 : 400
             },
             color: this.config.xAxisColor
           },
-          min: limits.xMin,
-          max: limits.xMax,
+          min: this.calculateAxisLimits(this.getChartData([]).datasets).xMin,
+          max: this.calculateAxisLimits(this.getChartData([]).datasets).xMax,
           ticks: {
             display: this.config.showXTicks ?? true,
             count: this.config.xTicksCount,
@@ -151,11 +157,13 @@ export abstract class BaseChart {
             color: this.config.xAxisColor
           },
           grid: {
-            display: this.config.showGrid ?? true,
+            display: this.config.showXGrid ?? false,
+            drawTicks: false,
             color: 'rgba(0, 0, 0, 0.1)'
           }
         },
         y: {
+          type: 'linear' as const,
           display: true,
           position: this.config.yAxisPosition || 'left',
           title: {
@@ -163,13 +171,13 @@ export abstract class BaseChart {
             text: this.config.yAxisLabel || 'Y Axis',
             font: {
               size: this.config.yAxisFontSize,
-              style: (this.config.yAxisFontStyle === 'italic' || this.config.yAxisFontStyle === 'bolditalic') ? 'italic' : 'normal',
-              weight: (this.config.yAxisFontStyle === 'bold' || this.config.yAxisFontStyle === 'bolditalic') ? 700 : 400
+              style: (this.config.yAxisFontStyle === 'italic') ? 'italic' : 'normal',
+              weight: (this.config.yAxisFontStyle === 'bold') ? 700 : 400
             },
             color: this.config.yAxisColor
           },
-          min: limits.yMin,
-          max: limits.yMax,
+          min: this.calculateAxisLimits(this.getChartData([]).datasets).yMin,
+          max: this.calculateAxisLimits(this.getChartData([]).datasets).yMax,
           ticks: {
             display: this.config.showYTicks ?? true,
             count: this.config.yTicksCount,
@@ -177,11 +185,18 @@ export abstract class BaseChart {
             color: this.config.yAxisColor
           },
           grid: {
-            display: this.config.showGrid ?? true,
+            display: this.config.showYGrid ?? false,
+            drawTicks: false,
             color: 'rgba(0, 0, 0, 0.1)'
           }
         }
       }
     };
+
+    return options;
+  }
+
+  public getPlugins() {
+    return [chartAreaBorder];
   }
 }

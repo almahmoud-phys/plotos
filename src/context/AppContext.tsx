@@ -22,7 +22,24 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ParsedData>(defaultData);
   const [traces, setTraces] = useState<Trace[]>([]);
-  const [chartConfig, setChartConfig] = useState<ChartConfig>({});
+  const [chartConfig, setChartConfig] = useState<ChartConfig>({
+    scales: {
+      x: {
+        grid: {
+          display: true,
+          drawOnChartArea: true,
+          drawTicks: true
+        }
+      },
+      y: {
+        grid: {
+          display: true,
+          drawOnChartArea: true,
+          drawTicks: true
+        }
+      }
+    }
+  });
 
   const updateChartConfig = (config: ChartConfig) => {
     setChartConfig(config);

@@ -91,6 +91,11 @@ export class LineChart extends BaseChart {
           title: {
             display: true,
             text: this.config.xAxisLabel || 'X Axis'
+          },
+          ticks: {
+            display: this.config.showXTicks !== false,
+            count: this.config.xTicksCount || undefined,
+            stepSize: this.config.xTicksStep || undefined
           }
         },
         y: {
@@ -100,6 +105,11 @@ export class LineChart extends BaseChart {
           title: {
             display: true,
             text: this.config.yAxisLabel || 'Y Axis'
+          },
+          ticks: {
+            display: this.config.showYTicks !== false,
+            count: this.config.yTicksCount || undefined,
+            stepSize: this.config.yTicksStep || undefined
           }
         }
       },
