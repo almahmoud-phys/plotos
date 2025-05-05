@@ -19,22 +19,3 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
-
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.fileName {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #111827;
-}
-
-.editedDate {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-}

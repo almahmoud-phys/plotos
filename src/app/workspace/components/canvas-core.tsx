@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback, forwardRef } from 'react';
 import styles from '../workspace.module.css';
 import debounce from 'lodash.debounce';
 import { fabric } from 'fabric';
+import { handleKeyDown } from '@/lib/key-events';
 
 interface CanvasProps {
   onObjectModified?: (obj: fabric.Object) => void;
@@ -220,6 +221,15 @@ const CanvasCore = forwardRef<HTMLCanvasElement, CanvasProps>(({
       if (selectedToolState === 'cursor') return;
       
       const pointer = canvas.getPointer(e.e);
+      const target = canvas.findTarget(e.e, false);
+      
+      // Prevent shape creation if:
+      // 1. Clicking on an existing shape
+      // 2. Clicking on a control point (for resizing/rotating)
+      if (target || e.target) {
+        return;
+      }
+      
       if (selectedShape) {
         addShape(selectedShape, pointer);
       }
@@ -231,6 +241,29 @@ const CanvasCore = forwardRef<HTMLCanvasElement, CanvasProps>(({
       canvas.off('mouse:down', handleMouseDown);
     };
   }, [selectedToolState, selectedShape, addShape]);
+
+  useEffect(() => {
+    if (!fabricRef.current) return;
+
+    const canvas = fabricRef.current;
+
+    const keyDownHandler = (e: KeyboardEvent) => {
+      handleKeyDown({
+        e,
+        canvas,
+        undo: () => {}, // Implement undo functionality if needed
+        redo: () => {}, // Implement redo functionality if needed
+        syncShapeInStorage: () => {}, // Implement storage sync if needed
+        deleteShapeFromStorage: () => {}, // Implement delete from storage if needed
+      });
+    };
+
+    document.addEventListener('keydown', keyDownHandler);
+
+    return () => {
+      document.removeEventListener('keydown', keyDownHandler);
+    };
+  }, [fabricRef]);
 
   return (
     <div ref={containerRef} className={styles.canvasContainer}>

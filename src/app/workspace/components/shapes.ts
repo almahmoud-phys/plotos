@@ -4,11 +4,12 @@ import {
   Rect, 
   Triangle, 
   Circle,
-  Line,
+  Line as FabricLine,
   IText,
   Image,
-  Object as FabricObjectProps
-} from 'fabric';
+  Object as FabricObjectProps,
+  Path
+} from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -71,7 +72,7 @@ export const createCircle = (pointer: PointerEvent) => {
 };
 
 export const createLine = (pointer: PointerEvent) => {
-  const line = new Line([0, 0, 100, 100], {
+  const line = new FabricLine([pointer.x, pointer.y, pointer.x + 100, pointer.y + 100], {
     stroke: "#aabbcc",
     strokeWidth: 2,
   });
@@ -88,6 +89,43 @@ export const createText = (pointer: PointerEvent, text: string) => {
   return createShapeWithDefaults(textObj, pointer);
 };
 
+export const createArrow = (pointer: PointerEvent) => {
+  const arrow = new Path('M 0 0 L 100 0 L 90 -10 M 100 0 L 90 10', {
+    stroke: "#aabbcc",
+    strokeWidth: 2,
+    fill: '',
+  });
+  return createShapeWithDefaults(arrow, pointer);
+};
+
+export const createStar = (pointer: PointerEvent) => {
+  const numPoints = 5;
+  const outerRadius = 50;
+  const innerRadius = 25;
+  const path = [];
+  
+  for (let i = 0; i < numPoints * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / numPoints;
+    const x = radius * Math.sin(angle);
+    const y = -radius * Math.cos(angle);
+    
+    if (i === 0) {
+      path.push('M', x, y);
+    } else {
+      path.push('L', x, y);
+    }
+  }
+  path.push('Z');
+  
+  const star = new Path(path.join(' '), {
+    stroke: "#aabbcc",
+    strokeWidth: 2,
+    fill: "#aabbcc",
+  });
+  return createShapeWithDefaults(star, pointer);
+};
+
 export const createSpecificShape = (
   shapeType: string,
   pointer: PointerEvent
@@ -95,22 +133,35 @@ export const createSpecificShape = (
   switch (shapeType) {
     case "rectangle":
       return createRectangle(pointer);
-
     case "triangle":
       return createTriangle(pointer);
-
     case "circle":
       return createCircle(pointer);
-
     case "line":
       return createLine(pointer);
-
+    case "arrow":
+      return createArrow(pointer);
+    case "star":
+      return createStar(pointer);
     case "text":
       return createText(pointer, "Tap to Type");
-
     default:
+      console.warn(`Shape type '${shapeType}' not supported`);
       return null;
   }
+};
+
+export const createShape = (
+  canvas: Canvas,
+  pointer: PointerEvent,
+  shapeType: string
+) => {
+  if (shapeType === "freeform") {
+    canvas.isDrawingMode = true;
+    return null;
+  }
+
+  return createSpecificShape(shapeType, pointer);
 };
 
 export const handleImageUpload = ({
@@ -148,19 +199,6 @@ export const handleImageUpload = ({
 
   reader.readAsDataURL(file);
   */
-};
-
-export const createShape = (
-  canvas: Canvas,
-  pointer: PointerEvent,
-  shapeType: string
-) => {
-  if (shapeType === "freeform") {
-    canvas.isDrawingMode = true;
-    return null;
-  }
-
-  return createSpecificShape(shapeType, pointer);
 };
 
 export const modifyShape = ({
@@ -222,10 +260,10 @@ export const bringElement = ({
 
   switch (direction) {
     case "front":
-      canvas.bringObjectToFront(selectedElement);
+      canvas.bringToFront(selectedElement);
       break;
     case "back":
-      canvas.sendObjectToBack(selectedElement);
+      canvas.sendToBack(selectedElement);
       break;
   }
 
@@ -234,29 +272,29 @@ export const bringElement = ({
 };
 
 // New utility functions
-export const cloneShape = async (
-  canvas: Canvas,
-  shape: FabricObject,
-  syncShapeInStorage: (shape: FabricObject) => void
-): Promise<void> => {
-  try {
-    const cloned = await shape.clone();
-    if (!cloned) return;
+// export const cloneShape = async (
+//   canvas: Canvas,
+//   shape: FabricObject,
+//   syncShapeInStorage: (shape: FabricObject) => void
+// ): Promise<void> => {
+//   try {
+//     const cloned = await shape.clone();
+//     if (!cloned) return;
 
-    cloned.set({
-      left: (shape.left || 0) + 20,
-      top: (shape.top || 0) + 20,
-      objectId: uuidv4(),
-    });
+//     cloned.set({
+//       left: (shape.left || 0) + 20,
+//       top: (shape.top || 0) + 20,
+//       objectId: uuidv4(),
+//     });
 
-    canvas.add(cloned);
-    canvas.setActiveObject(cloned);
-    canvas.requestRenderAll();
-    syncShapeInStorage(cloned);
-  } catch (error) {
-    console.error('Error cloning shape:', error);
-  }
-};
+//     canvas.add(cloned);
+//     canvas.setActiveObject(cloned);
+//     canvas.requestRenderAll();
+//     syncShapeInStorage(cloned);
+//   } catch (error) {
+//     console.error('Error cloning shape:', error);
+//   }
+// };
 
 export const deleteShape = (
   canvas: Canvas,
